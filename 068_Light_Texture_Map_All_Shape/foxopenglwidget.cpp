@@ -22,7 +22,7 @@ unsigned long long gl_time = 0;
 
 FoxOpenGLWidget::FoxOpenGLWidget(QWidget* parent) : QOpenGLWidget(parent)
 {
-    this->_sphere = Sphere(1.0f, 5.0f);
+    this->_sphere = Sphere(1.0f, 0.1f);
     this->_cone = Cone(R, HEIGHT, 1.10f);
     this->_cube = Cube(LENGTH, COLOR_CUBE);
     this->_light = Light(1.0f, QVector3D(1.0f, 1.0f, 1.0f),
@@ -69,7 +69,24 @@ FoxOpenGLWidget::~FoxOpenGLWidget()
 /* 首要要执行初始化过程，将函数指针指向显卡内的函数 */
 void FoxOpenGLWidget::initializeGL()
 {
-    qDebug() << "[INFO] initializeOpenGLFunctions(): " << initializeOpenGLFunctions();  // 【重点】初始化OpenGL函数，将 Qt 里的函数指针指向显卡的函数（头文件 QOpenGLFunctions_X_X_Core）
+    // QOpenGLFunctions_3_3_Core 的函数指针必须在第一次调用任何 gl* 函数前初始化。
+    if (!initializeOpenGLFunctions())
+    {
+        qWarning() << "Failed to initialize OpenGL 3.3 core functions";
+        return;
+    }
+
+    const auto* version = glGetString(GL_VERSION);
+    const auto* renderer = glGetString(GL_RENDERER);
+
+    qDebug() << "OpenGL version:"
+             << (version ? reinterpret_cast<const char*>(version) : "<unavailable>");
+    qDebug() << "Renderer:"
+             << (renderer ? reinterpret_cast<const char*>(renderer) : "<unavailable>");
+
+    qDebug() << "Qt format:"
+             << context()->format().majorVersion()
+             << context()->format().minorVersion();
 
     // ------------------------ VAO | VBO  | EBO------------------------
     // VAO 和 VBO 对象赋予 ID

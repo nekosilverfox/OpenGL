@@ -110,5 +110,5 @@ void Sphere::_genVectorVerticesAndIndices()
         vertices.push_back(current_top_next_point);
         vertices.push_back(current_normal);
     }
-    qDebug() << "[INFO] 顶点生成结束";
+    qDebug() << "[INFO] 球体顶点生成结束，顶点数" << points.size();
 }
