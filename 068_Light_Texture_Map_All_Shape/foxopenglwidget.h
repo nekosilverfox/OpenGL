@@ -3,7 +3,7 @@
 
 
 #include <QOpenGLWidget>  // 相当于GLFW
-#include <QOpenGLFunctions_3_3_Core>  // 相当于 GLAD
+#include <QOpenGLFunctions_4_1_Core>  // 相当于 GLAD
 #include <QOpenGLShaderProgram>
 #include <QTimer>
 #include <QTime>
@@ -16,7 +16,7 @@
 
 
 
-class FoxOpenGLWidget : public QOpenGLWidget, QOpenGLFunctions_3_3_Core
+class FoxOpenGLWidget : public QOpenGLWidget, QOpenGLFunctions_4_1_Core
 {
     Q_OBJECT
 
@@ -44,14 +44,14 @@ public:
 
 protected:
     /* 需要重载的 QOpenGLWidget 中的三个函数 */
-    virtual void initializeGL();
-    virtual void resizeGL(int w, int h);
-    virtual void paintGL();
+    virtual void initializeGL() override;
+    virtual void resizeGL(int w, int h) override;
+    virtual void paintGL() override;
 
     /* 处理键盘、鼠标事件 */
-    void keyPressEvent(QKeyEvent* event);
-    void mouseMoveEvent(QMouseEvent* event);    // 鼠标移动
-    void wheelEvent(QWheelEvent* event);        // 鼠标滚轮 
+    void keyPressEvent(QKeyEvent* event) override;
+    void mouseMoveEvent(QMouseEvent* event) override;    // 鼠标移动
+    void wheelEvent(QWheelEvent* event) override;        // 鼠标滚轮
 
 signals:
 

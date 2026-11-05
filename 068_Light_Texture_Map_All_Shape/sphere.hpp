@@ -20,6 +20,9 @@ public:
     /* 获取绘制三角形的数量 */
     unsigned int getNumTrianglesinSphere();
 
+    unsigned long getPointCount();
+
+
 private:
     void _genVectorVerticesAndIndices();
 

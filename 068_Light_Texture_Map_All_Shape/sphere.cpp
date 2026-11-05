@@ -25,6 +25,11 @@ unsigned int Sphere::getNumTrianglesinSphere()
     return vertices.size()*3 / 6;
 }
 
+unsigned int Sphere::getPointCount()
+{
+
+}
+
 
 /**
  * 算法参考：https://dhbloo.github.io/2020/03/12/Sphere/#%E7%90%83%E5%9D%90%E6%A0%87%E8%BD%AC%E6%8D%A2

@@ -38,7 +38,9 @@ FoxOpenGLWidget::FoxOpenGLWidget(QWidget* parent) : QOpenGLWidget(parent)
     is_move_cone = false;
     is_move_cube = false;
 
-    this->camera_ = Camera(QVector3D(-1.0f, 1.0f, 3.0f), QVector3D(0.0f, 1.0f, 0.0f), 50.0f, -90.0f, -20.0f);
+    this->camera_ = Camera(QVector3D(-1.0f, 1.0f, 3.0f),
+                           QVector3D(0.0f, 1.0f, 0.0f),
+                           50.0f, -90.0f, -20.0f);
 
     /* 暂时用于键盘点击事件 */
     setFocusPolicy(Qt::StrongFocus);
@@ -46,8 +48,8 @@ FoxOpenGLWidget::FoxOpenGLWidget(QWidget* parent) : QOpenGLWidget(parent)
 
     /* 计时器（时钟）每隔 TIMEOUT毫秒 取一次时间（发送一次信号） */
     this->timer_.start(TIMEOUT);
-    connect(&this->timer_, SIGNAL(timeout()),
-            this, SLOT(updateGL()));
+    connect(&this->timer_, &QTimer::timeout,
+            this, &FoxOpenGLWidget::updateGL);
 }
 
 
@@ -576,8 +578,8 @@ void FoxOpenGLWidget::updateGL()
     gl_time += 1;
 
 
-//    _cone.mat_model.rotate( 0.7f, 0.0f, 1.0f, 0.0f);
-//    _cube.mat_model.rotate( 0.7f, 0.0f, 1.0f, 0.1f);
+    _cone.mat_model.rotate( 0.7f, 0.0f, 1.0f, 0.0f);
+    _cube.mat_model.rotate( 0.7f, 0.0f, 1.0f, 0.1f);
     _sphere.mat_model.rotate(0.5f, 0.0f, 1.0f, 0.4f);
 
 
@@ -604,8 +606,8 @@ void FoxOpenGLWidget::updateGL()
         _light.color_specular = new_color;
     }
     else
-    {
-        _light.color_ambient  = QVector3D(0.4f, 0.4f, 0.4f);  // 乘以一个数来减少影响
+    {  // 恢复白色
+        _light.color_ambient  = QVector3D(0.4f, 0.4f, 0.4f);
         _light.color_diffuse  = QVector3D(0.5f, 0.5f, 0.5f);
         _light.color_specular = QVector3D(1.0f, 1.0f, 1.0f);
     }
