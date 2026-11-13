@@ -1,43 +1,33 @@
-<p align="center">
- <img width="100px" src="https://raw.githubusercontent.com/NekoSilverFox/NekoSilverfox/403ab045b7d9adeaaf8186c451af7243f5d8f46d/icons/silverfox.svg" align="center" alt="NekoSilverfox" />
- <h1 align="center">OpenGL</h1>
- <p align="center"><b>计算机图形学</b></p>
-</p>
+<div align="center">
+  <img width="100px" src="https://raw.githubusercontent.com/NekoSilverFox/NekoSilverfox/403ab045b7d9adeaaf8186c451af7243f5d8f46d/icons/silverfox.svg" alt="NekoSilverfox" />
+  <h1>OpenGL</h1>
+  <p><b>计算机图形学</b></p>
+</div>
 
-
-
- <p align="center">
-  <img width="250px" src="https://github.com/NekoSilverFox/NekoSilverfox/blob/master/icons/logo_building_spbstu.png?raw=true" align="center" alt="ogo_building_spbstu" />
-  </br>
-  </br>
-  <b><b>Санкт-Петербургский государственный политехнический университет</b></br></b>
+<div align="center">
+  <img width="250px" src="https://github.com/NekoSilverFox/NekoSilverfox/blob/master/icons/logo_building_spbstu.png?raw=true" alt="logo_building_spbstu" />
+  <br/>
+  <br/>
+  <b>Санкт-Петербургский государственный политехнический университет</b><br/>
   <b>Институт компьютерных наук и технологий</b>
- </p>
+</div>
 
-<div align=left>
-<!-- SPbSTU 最后一行 -->
-
-
-
-<div align=center>
-
+<div align="center">
 
 [![License](https://img.shields.io/badge/license-Apache%202.0-brightgreen)](LICENSE)
 ![Qt](https://img.shields.io/badge/Qt-6.2+-yellow)
-![OpenGL](https://img.shields.io/badge/OpenGL-4.5-orange)
+![OpenGL](https://img.shields.io/badge/OpenGL-3.3-orange)
 ![OpenGL_mod](https://img.shields.io/badge/OpenGL-Core--profile-orange)
 
+</div>
 
-<div align=left>
-<!-- 顶部至此截止 -->
+> **关于目标版本**：本文示例统一使用 **OpenGL 3.3 Core Profile**。原因是 macOS 的 OpenGL 实现上限为 **4.1 Core**，请求 4.5 上下文必然失败（详见[简介及资料](#简介及资料)一节）。
 
 
 > 如果你不了解 Qt 这个框架，建议先学习：
 >
 > - 关于 Qt 无比详细教程及案例实现：[https://github.com/NekoSilverFox/Qt](https://github.com/NekoSilverFox/Qt)
->     其中不仅涵盖了 Qt 基本控件的使用及讲解，还包含了大学和培训机构不会讲到的：插件设计及实现、基于 QTest 的静态动态、动态测试、CI/CD的使用、Qt 函数/方法注意事项等
->
->     
+>   其中不仅涵盖了 Qt 基本控件的使用及讲解，还包含了大学和培训机构不会讲到的：插件设计及实现、基于 QTest 的静态测试与动态测试、CI/CD 的使用、Qt 函数/方法注意事项等
 >
 > 如果你对 OpenCV 计算机视觉感兴趣：
 >
@@ -49,23 +39,43 @@
 
 
 
-[toc]
+## 目录
+
+- [目录说明](#目录说明)
+- [简介及资料](#简介及资料)
+- [专有名词及解释](#专有名词及解释)
+- [OpenGL 对象](#opengl-对象)
+- [你好，三角形](#你好三角形)
+- [Qt 交互](#qt-交互)
+- [GLSL](#glsl)
+- [纹理](#纹理)
+- [线性代数](#线性代数)
+- [坐标系统](#坐标系统)
+- [3D](#3d)
+- [光照](#光照)
+- [材质](#材质)
+- [贝塞尔](#贝塞尔)
+- [高级 GLSL](#高级-glsl)
+- [几何着色器](#几何着色器)
+
 
 
 
 # 目录说明
 
-**注意！大部分实验是在 MacOS13 上实现的。如果在 Windows 上提示错误，请修改 `.pro` 配置文件！**
+**注意！大部分实验是在 macOS 13 上实现的。如果在 Windows 上提示错误，请修改 `.pro` 配置文件！**
+
+> - Apple 自 macOS 10.14 起已废弃 OpenGL，仅在兼容层中提供（上限 4.1 Core），长期方案是 Metal；本文的 OpenGL 内容仍可在 macOS 上学习与实验，但不适合作为新项目的技术选型。
 
 | 编号                                                         | 说明                                                         |
 | ------------------------------------------------------------ | ------------------------------------------------------------ |
 | 000 - Apple M1 配置测试                                      | 在 M1 Mac 下 OpenGL 的配置及运行（基于 Clang）               |
-| [001_OpenGLWidget_HelloWidget](https://github.com/NekoSilverFox/OpenGL/tree/main/001_OpenGLWidget_HelloWidget) | 如果在 Qt 的环境下，使用初始化 OpenGL 控件                   |
-| [002_Triangle_VAO_VBO](https://github.com/NekoSilverFox/OpenGL/tree/main/002_Triangle_VAO_VBO) | 基于 `001` 的初始化控件后，增加使用 VAO、VBO 代码绘制三角形的代码<br />顶点和片段着色器的编写、编译、链接和使用 |
+| [001_OpenGLWidget_HelloWidget](https://github.com/NekoSilverFox/OpenGL/tree/main/001_OpenGLWidget_HelloWidget) | 如何在 Qt 环境下初始化 OpenGL 控件                   |
+| [002_Triangle_VAO_VBO](https://github.com/NekoSilverFox/OpenGL/tree/main/002_Triangle_VAO_VBO) | 基于 `001` 初始化控件后，使用 VAO、VBO 绘制三角形<br />顶点和片段着色器的编写、编译、链接和使用 |
 | [003_Triangle_EBO](https://github.com/NekoSilverFox/OpenGL/tree/main/003_Triangle_EBO) | 通过 EBO（元素/索引缓冲对象）进行了 2 个三角形的绘制（绘制为 1 个矩形） |
-| [005_Two_triangle_exercise](https://github.com/NekoSilverFox/OpenGL/tree/main/005_Two_triangle_exercise) | 小练习：使用 VAO 和 VBO 数组进行对不同三角形的绘制；使用 2 个片段着色器进行分别着色 |
+| [005_Two_triangle_exercise](https://github.com/NekoSilverFox/OpenGL/tree/main/005_Two_triangle_exercise) | 小练习：用 VAO/VBO 绘制两个三角形，并使用 2 个片段着色器分别着色 |
 |                                                              |                                                              |
-| [010_Qt_UI_with_OpenGL](https://github.com/NekoSilverFox/OpenGL/tree/main/010_Qt_UI_with_OpenGL) | Qt UI 调用 OpenGL 功能：通过 QOpenGLWidget 上的按钮实现三角形的绘制、清除、是否开启线框模式<br />Qt`update()` 函数的注意事项及使用 |
+| [010_Qt_UI_with_OpenGL](https://github.com/NekoSilverFox/OpenGL/tree/main/010_Qt_UI_with_OpenGL) | Qt UI 调用 OpenGL 功能：通过 QOpenGLWidget 上的按钮控制绘制、清除、线框模式切换<br />Qt `update()` 函数的注意事项及使用 |
 | [011_QOpenGLShaderProgram](https://github.com/NekoSilverFox/OpenGL/tree/main/011_QOpenGLShaderProgram) | 使用 Qt 提供的 QOpenGLShaderProgram 类，进行顶点和片段着色器的编译链接和使用。并且将 GLSL 代码以 Qt 资源文件的方式传入和使用 |
 |                                                              |                                                              |
 | [020_GLSL_in_out](https://github.com/NekoSilverFox/OpenGL/tree/main/020_GLSL_in_out) | 讲解了 GLSL 代码中 `in` 和 `out` 关键字                      |
@@ -79,7 +89,7 @@
 | [032_Texture_Filtering](https://github.com/NekoSilverFox/OpenGL/tree/main/032_Texture_Filtering) | 纹理的过滤方式（`GL_LINEAR` - 线性过滤；`GL_NEAREST` - 临近过滤） |
 | [033_Texture_exercise](https://github.com/NekoSilverFox/OpenGL/tree/main/033_Texture_exercise) | 纹理小练习                                                   |
 |                                                              |                                                              |
-| [040_Rotate_and_Move](https://github.com/NekoSilverFox/OpenGL/tree/main/040_Rotate_and_Move) | 使用矩阵移动和缩放                                           |
+| [040_Rotate_and_Move](https://github.com/NekoSilverFox/OpenGL/tree/main/040_Rotate_and_Move) | 使用矩阵实现旋转、缩放与位移                                 |
 | [045_3D](https://github.com/NekoSilverFox/OpenGL/tree/main/045_3D) | 实现 3D 立方体效果                                           |
 | [046_3D_exercise](https://github.com/NekoSilverFox/OpenGL/tree/main/046_3D_exercise) | 3D 小练习                                                    |
 | [047_3D_Camera](https://github.com/NekoSilverFox/OpenGL/tree/main/047_3D_Camera) | 初步实现 3D 摄像机                                           |
@@ -87,8 +97,8 @@
 | [049_Camera_OOP](https://github.com/NekoSilverFox/OpenGL/tree/main/049_Camera_OOP) | 封装摄像机                                                   |
 | [055_3D_Sphere](https://github.com/NekoSilverFox/OpenGL/tree/main/055_3D_Sphere) | 实现球体绘制                                                 |
 | [056_3D_Sphere_and_Cube](https://github.com/NekoSilverFox/OpenGL/tree/main/056_3D_Sphere_and_Cube) | 实现球体和立方体绘制                                         |
-| [057_3D_Sphere_Cube_Cone](https://github.com/NekoSilverFox/OpenGL/tree/main/057_3D_Sphere_Cube_Cone) | 实现球体和立方体和椎体绘制                                   |
-| [057_3D_Sphere_Cube_Cone_AppleSoc](https://github.com/NekoSilverFox/OpenGL/tree/main/057_3D_Sphere_Cube_Cone_AppleSoc) | 实现球体和立方体和椎体绘制（基于 Apple 平台的工程文件）      |
+| [057_3D_Sphere_Cube_Cone](https://github.com/NekoSilverFox/OpenGL/tree/main/057_3D_Sphere_Cube_Cone) | 实现球体和立方体和锥体绘制                                   |
+| [057_3D_Sphere_Cube_Cone_AppleSoc](https://github.com/NekoSilverFox/OpenGL/tree/main/057_3D_Sphere_Cube_Cone_AppleSoc) | 实现球体和立方体和锥体绘制（基于 Apple 平台的工程文件）      |
 |                                                              |                                                              |
 | [060_Lighting_init](https://github.com/NekoSilverFox/OpenGL/tree/main/060_Lighting_init) | 初步实现照明                                                 |
 | [060_Lighting_init_AppleSoc](https://github.com/NekoSilverFox/OpenGL/tree/main/060_Lighting_init_AppleSoc) | 初步实现照明（基于 Apple 平台的工程文件）                    |
@@ -102,13 +112,13 @@
 |                                                              |                                                              |
 | [110_Geometry_Shader](https://github.com/NekoSilverFox/OpenGL/tree/main/110_Geometry_Shader) | 通过几何着色器 (Geometry shader) 实现将点变为线              |
 | [111_Geometry_House](https://github.com/NekoSilverFox/OpenGL/tree/main/111_Geometry_House) | 通过几何着色器绘制小房子                                     |
-| [112_Geometry_Bezier_2D](https://github.com/NekoSilverFox/OpenGL/tree/main/112_Geometry_Bezier_2D) | 通过几何着色器实现贝叶斯曲线（工程可能不能正常运行）         |
-| [112_Geometry_normal_ explode](https://github.com/NekoSilverFox/OpenGL/tree/main/112_Geometry_normal_explode) | 通过几何着色器实现二阶贝叶斯（工程可能不能正常运行）         |
+| [112_Geometry_Bezier_2D](https://github.com/NekoSilverFox/OpenGL/tree/main/112_Geometry_Bezier_2D) | 通过几何着色器实现贝塞尔曲线（工程可能不能正常运行：依赖兼容模式 API） |
+| [112_Geometry_normal_ explode](https://github.com/NekoSilverFox/OpenGL/tree/main/112_Geometry_normal_%20explode) | 通过几何着色器实现二阶贝塞尔（工程可能不能正常运行：依赖兼容模式 API） |
 | [115_Geometry_Sphere_change](https://github.com/NekoSilverFox/OpenGL/tree/main/115_Geometry_Sphere_change) | 通过几何着色器实现球体形状变化                               |
-| [116_Geometry_Cone_change](https://github.com/NekoSilverFox/OpenGL/tree/main/116_Geometry_Cone_change) | 通过几何着色器实现椎体形状变化                               |
+| [116_Geometry_Cone_change](https://github.com/NekoSilverFox/OpenGL/tree/main/116_Geometry_Cone_change) | 通过几何着色器实现锥体形状变化                               |
 | [117_Geometry_Cone2Rocket](https://github.com/NekoSilverFox/OpenGL/tree/main/117_Geometry_Cone2Rocket) | 通过几何着色器实现将平面变为联盟号火箭，不带颜色变化（要使用 Windows 运行） |
 | [117_Geometry_Cone2Rocket_Winonws](https://github.com/NekoSilverFox/OpenGL/tree/main/117_Geometry_Cone2Rocket_Winonws) | 通过几何着色器实现将平面变为联盟号火箭，带有颜色变化（要使用 Windows 运行） |
-| [120_Bezier_2D](https://github.com/NekoSilverFox/OpenGL/tree/main/120_Bezier_2D) | 贝叶斯二阶曲线（基于 OpenGL3.0 之前的老版本、非核心模式。新版本下无法运行） |
+| [120_Bezier_2D](https://github.com/NekoSilverFox/OpenGL/tree/main/120_Bezier_2D) | 贝塞尔二阶曲线（基于 OpenGL 3.0 之前的老版本、非核心模式，新版本下无法运行；详见[贝塞尔](#贝塞尔)一节的兼容性说明） |
 |                                                              |                                                              |
 | [130_Physical_putdown_model](https://github.com/NekoSilverFox/OpenGL/tree/main/130_Physical_putdown_model) | 实现物体掉落模型                                             |
 | [135_Physical_roll_model_old_method](https://github.com/NekoSilverFox/OpenGL/tree/main/135_Physical_roll_model_old_method) | 物体翻滚模型（不建议参考此工程）                             |
@@ -123,7 +133,7 @@
 
 OpenGL 是一种协议和标准，是一种小而美的东西。因为它是一种框协议，所以它是不需要管 OS 层面和不同显卡层面的差异的。
 
-OpenGL 官方的推荐为：GLFW+GLAD，但是我们可以使用 OpenGL+Qt（MinGW）。借助于 Qt 的封装，我们无需配置第三方库，更接近于实战
+常见的入门组合是 GLFW + GLAD（这是 LearnOpenGL 教程的推荐，并非 Khronos 官方规定）。本文改用 Qt 的封装（`QOpenGLWidget` + `QOpenGLFunctions_3_3_Core`），借助 Qt 无需再配置 GLFW/GLAD 等第三方库，也更接近实际工程。
 
 
 
@@ -139,17 +149,17 @@ https://ke.qq.com/course/package/40726?flowToken=1041265
 
 
 
-**版本的使用：**
+**版本的选择：**
 
 - OpenGL3.3 及以上版本，因为具备可编程管线的功能。3.3 版本是一个分水岭
-- VC++ 最好使用 2013 以上的版本
-- C++11 之上的版本
+- Windows 下推荐 **Visual Studio 2019 / 2022**（MSVC v142 / v143）。
+- **C++11 或更高**（推荐 C++17）。
 
 
 
-**Cmakelist 的编写：**
+**CMakeLists.txt 的编写：**
 
-基于 M1 Mac
+以 M1 Mac（Homebrew 安装 GLFW）为例：
 
 ```cmake
 cmake_minimum_required(VERSION 3.22)
@@ -182,14 +192,17 @@ target_link_libraries(
 
 **在使用 Qt 下，对于 M 系列芯片应该编写如下 .pro文件：**
 
-```properties
-QT       += core gui widgets opengl openglwidgets
+**在使用 Qt 时，`.pro` 文件需要包含如下模块：**
 
-...
-
-LIBS += -lopengl32
-
+```qmake
+QT += core gui widgets opengl openglwidgets
 ```
+
+> **不需要手动链接 OpenGL 库**：Qt 的 `opengl` 模块会按平台自动处理。
+> 如果确有需要手动指定，macOS 上写 `LIBS += -framework OpenGL`，
+> **切勿写 `LIBS += -lopengl32`**——`opengl32` 只存在于 Windows，在 macOS 上会导致链接失败。
+>
+> 另外，Qt 6 官方已主推 **CMake**，qmake 处于维护状态；新工程建议直接用 CMake。
 
 
 
@@ -215,9 +228,10 @@ int main(int argc, char *argv[])
     QApplication a(argc, argv);
 
     /**
-     *  在 M1 的 Mac 要设置这里
-     *  ！！3.3 的版本可用，但是 4.5 用不了！，initializeOpenGLFunctions 返回 false
-    */
+     *  在 Apple Silicon（M 系列）的 Mac 上必须设置这里
+     *  原因：macOS 的 OpenGL 实现上限为 4.1 Core，
+     *        请求 4.5 上下文必然失败（initializeOpenGLFunctions 返回 false）
+     */
     QSurfaceFormat format;
     format.setMajorVersion(3);
     format.setMinorVersion(3);
@@ -239,32 +253,32 @@ int main(int argc, char *argv[])
 | 名词                            | 英文                          | 解释                                                         |
 | ------------------------------- | ----------------------------- | ------------------------------------------------------------ |
 | 对象                            | Object                        | 一个对象是指一些选项的集合，**代表OpenGL状态的一个子集**，可以使用对象来记录状态 |
-| 图形渲染管线                    | Graphics Pipeline             | 实际上指的是一堆原始图形数据途经一个输送管道，期间经过各种变化处理最终出现在屏幕的过程。图形渲染管线可以被划分为两个主要部分：第一部分把你的3**D坐标转换为2D坐标**，第二部分是把**2D坐标转变为实际的有颜色的像素** |
-| 着色器                          | Shader                        | 在GPU上为每一个（渲染管线）阶段运行的小程序（小核心）        |
-| 图元                            | Primitive                     | 指定坐标和颜色值构成的是什么，这些数据所表示的渲染类型；是渲染成一个点（GL_POINT）、一条线（GL_LINE_STRIP）还是三角形（GL_TRIANGLES） |
-| 片段                            | Fragment                      | 在 OpenGL 中一个片段是 OpenGL 渲染一个像素所需要的所有数据   |
-| 裁切                            | Clipping                      | 裁切会丢弃超出视图以外的所有像素，用来提升执行效率           |
-| 深度                            |                               | 可以理解为z坐标，它代表一个像素在空间中和你的距离，如果离你远就可能被别的像素遮挡，你就看不到它了，它会被丢弃，以节省资源 |
-| NDC 标准化设备坐标              | Normalized Device Coordinates | 顶点着色器中处理过后，就是标准化设备坐标了，x、y、z的值在-1.0到1.0的一小段空间（立方体）。 落在范围外的坐标都会被裁剪，因为 GPU 没有必要再去消耗算力去进行计算 |
-| 顶点着色器                      | Vertex Shader                 | **图形渲染管线的第一部分**，它把一个单独的顶点作为输入。顶点着色器主要的目的是把3D坐标转为另一种3D坐标，同时允许我们对顶点属性进行一些基本处理 |
-| ↓ 图元装配                      | Primitive Assembly            | 图元装配阶段将顶点着色器输出的所有顶点作为输入（如果是GL_POINTS，那么就是一个顶点），并**将所有的点装配成指定图元的形状** |
-| ↓ 几何着色器                    | Geometry Shader               | 图元装配阶段的输出会传递给几何着色器(Geometry Shader)。几何着色器把图元形式的一系列顶点的集合作为输入，它可以通过产生新顶点构造出新的（或是其它的）图元来生成其他形状 |
-| ↓ 光栅化阶段                    | Rasterization Stage           | 几何着色器的输出会被传入光栅化阶段，里它会把**图元映射为最终屏幕上相应的像素**，生成供片段着色器(Fragment Shader)使用的==片段==。在片段着色器运行之前会执行裁切(Clipping) |
-| ↓ 片段着色器                    | Fragment Shader               | 计算一个像素的最终颜色，这也是所有OpenGL高级效果产生的地方。通常，片段着色器包含3D场景的数据（比如光照、阴影、光的颜色等等），这些数据可以被用来计算最终像素的颜色。 |
-| ↓ Alpha测试和混合(Blending)阶段 |                               | 这个阶段检测片段的对应的深度（和模板(Stencil)）值，用它们来判断这个像素是其它物体的前面还是后面，决定是否应该丢弃。这个阶段也会检查alpha值（alpha值定义了一个物体的透明度）并对物体进行混合(Blend)。所以，即使在片段着色器中计算出来了一个像素输出的颜色，在渲染多个图形时最后的像素颜色也可能完全不同 |
-| 顶点                            | Vertex                        | 一个3D坐标的数据集合                                         |
+| 图形渲染管线                    | Graphics Pipeline             | 实际上指的是一堆原始图形数据途经一个输送管道，期间经过各种变化处理最终出现在屏幕的过程。图形渲染管线可以被划分为两个主要部分：<br />第一部分把你的**3D坐标转换为2D坐标**，<br />第二部分是把**2D坐标转变为实际的有颜色的像素** |
+| 着色器                          | Shader                        | 运行在 GPU 上的小程序，渲染管线中每个可编程阶段各由一个着色器负责处理该阶段的数据 |
+| 图元                            | Primitive                     | 指定坐标和颜色值构成的是什么，即这些数据要渲染成什么类型；是渲染成一个点（`GL_POINTS`）、一条线（`GL_LINES`）、一条折线（`GL_LINE_STRIP`）还是三角形（`GL_TRIANGLES`） |
+| 片段                            | Fragment                      | 在 OpenGL 中一个**片段是 OpenGL 渲染一个像素所需要的所有数据** |
+| 裁剪                            | Clipping                      | 裁剪会切除图元位于裁剪体之外的部分，避免为不可见的区域做光栅化，用来提升执行效率 |
+| 深度                            | Depth                         | 片段的深度值（窗口空间中的归一化 z），用于深度测试判断该片段是否被更近的片段遮挡；被遮挡的片段会被丢弃，以节省后续开销 |
+| NDC 标准化设备坐标              | Normalized Device Coordinates | 顶点着色器输出的**裁剪空间**坐标经透视除法（各分量除以 w）后得到 NDC，x、y、z 落在 `[-1.0, 1.0]` 的立方体内。落在范围外的部分会被裁剪 |
+| 顶点着色器                      | Vertex Shader                 | **图形渲染管线的第一部分**，它把一个个单独的顶点作为输入。顶点着色器主要的目的是把顶点从局部坐标变换到**裁剪空间**坐标（写入 `gl_Position`），同时允许我们对顶点属性进行一些基本处理（缩放、位移等） |
+| ↓ 图元装配                      | Primitive Assembly            | 图元装配阶段将顶点着色器输出的**所有顶点**作为输入（如果是 `GL_POINTS`，那么每次只有一个顶点），并**将所有的点装配成指定图元的形状** |
+| ↓ 几何着色器                    | Geometry Shader               | 图元装配阶段的输出会传递给几何着色器（Geometry Shader）。几何着色器把图元形式的一系列顶点的集合作为输入，它可以通过产生新顶点构造出新的（或是其它的）图元来生成其他形状。该阶段**可选**，不提供几何着色器时整个阶段被跳过，并非"使用默认着色器" |
+| ↓ 光栅化阶段                    | Rasterization Stage           | 几何着色器的输出会被传入光栅化阶段，它会把**图元映射为最终屏幕上相应的像素**，生成供片段着色器（Fragment Shader）使用的==片段==。在片段着色器运行之前会执行裁剪（Clipping），把图元位于裁剪体之外的部分切除 |
+| ↓ 片段着色器                    | Fragment Shader               | 计算一个像素的最终颜色，这也是所有 OpenGL 高级效果产生的地方。通常，片段着色器包含 3D 场景的数据（比如光照、阴影、光的颜色等等），这些数据可以被用来计算最终像素的颜色。 |
+| ↓ 逐片段操作（深度/模板测试与混合） | Per-Fragment Operations   | 这一阶段（旧称"Alpha 测试和混合阶段"）先用深度（和模板 Stencil）值判断该片段是否被已有内容遮挡，决定是否丢弃；再按 alpha 值（定义物体的透明度）与已有颜色混合（Blend）。所以，即使在片段着色器中算出了一个颜色，最终像素颜色也可能完全不同。**注意：`GL_ALPHA_TEST` 自 OpenGL 3.1 Core 起已被移除，透明度只能通过混合实现** |
+| 顶点                            | Vertex                        | 一组顶点属性（位置、法线、纹理坐标……）的集合，至少包含位置；坐标不一定是 3D（也可以是 2D 或 4D 齐次形式） |
 | 顶点数据                        | Vertex Data                   | 顶点数据是一系列顶点的集合                                   |
-| 顶点属性                        | Vertex Attribute              | 顶点的数据是用顶点属性表示的，它可以包含任何我们想用的数据   |
-| VAO 顶点数组对象                | Vertex Array Object           | 使用 VAO 配置 OpenGL 如何解释显存，VAO 的数据类型是唯一的，并不保存实际的数据，而是**放顶点结构的定义** |
-| VBO 顶点缓冲对象                | Vertex Buffer Object          | VBO 顶点缓冲对象**管理着**顶点着色器（Vertex Shader），VBO的**类型是**`GL_ARRAY_BUFFER`；它会在 GPU 上创建内存，用于储存我们的大量顶点数据 |
-| EBO/IBO 元素/索引缓冲对象       | Element/Index Buffer Object   | EBO是一个缓冲区，就像一个顶点缓冲区对象一样，它**存储 OpenGL 要绘制顶点的==索引==** |
-| 着色器程序对象                  | Shader Program Object         | 多个着色器链接（Link）合并之后并最终链接完成的版本，在渲染对象时使用`glUseProgram(shaderProgram)`激活这个着色器程序 |
-| 映射                            | Map                           |                                                              |
-| 纹理                            | Texture                       | 纹理是一个2D图片（甚至也有1D和3D的纹理），它可以用来添加物体的细节 |
-| 纹理坐标                        | Texture Coordinate            | 我们绘制图形的每个顶点关联着一个纹理坐标，它用来标明该从纹理图像的哪个部分采样（译注：采集片段颜色） |
-| 采样器/采样                     | Sampler/Sampling              |                                                              |
-| 纹理过滤                        |                               |                                                              |
-| 多级渐远纹理                    | Mipmap                        |                                                              |
+| 顶点属性                        | Vertex Attribute              | 顶点由若干顶点属性（attribute）描述，每个属性可以包含任何我们想用的数据 |
+| VAO 顶点数组对象                | Vertex Array Object           | 使用 VAO 配置 OpenGL **如何解释显存**。VAO 是唯一标识的配置对象，不保存实际的顶点数据，只记录**顶点属性的格式与启用状态**，以及 `GL_ELEMENT_ARRAY_BUFFER` 的绑定 |
+| VBO 顶点缓冲对象                | Vertex Buffer Object          | VBO **管理 GPU 显存中的一块顶点数据**，缓冲目标是 `GL_ARRAY_BUFFER`；它会在 GPU 上创建内存，用于储存我们的大量顶点数据。**VBO 与顶点着色器之间没有管理关系**，着色器只是在绘制时按 VAO 记录的格式读取它 |
+| EBO/IBO 元素/索引缓冲对象       | Element/Index Buffer Object   | EBO 是一个缓冲区，就像一个顶点缓冲对象一样，它**存储 OpenGL 要绘制顶点的==索引==** |
+| 着色器程序对象                  | Shader Program Object         | 多个着色器对象**链接（link）后的可执行程序对象**，在渲染对象时使用`glUseProgram(shaderProgram)`激活这个着色器程序<br />`QOpenGLShaderProgram::bind()`，内部就是 `glUseProgram(programId())` |
+| 映射                            | Map                           | 把缓冲区对象的数据存储映射到客户端地址空间（`glMapBuffer`），从而直接读写显存中的缓冲内容 |
+| 纹理                            | Texture                       | 纹理是一个 2D 图片（甚至也有 1D 和 3D 的纹理），它可以用来添加物体的细节 |
+| 纹理坐标                      | Texture Coordinate            | 我们绘制图形的每个顶点关联着一个纹理坐标，它用来标明该从纹理图像的哪个部分采样（译注：采集片段颜色） |
+| 采样器/采样                     | Sampler/Sampling              | 采样器是着色器中用于读取纹理的对象（`sampler2D` 等）；采样指按纹理坐标从纹理中取出一个值的过程 |
+| 纹理过滤                        | Min/Mag Filtering             | 纹理被放大或缩小时，如何由邻近的纹素（texel）计算出采样结果，常见方式为 `GL_NEAREST` 与 `GL_LINEAR` |
+| 多级渐远纹理                    | Mipmap                        | 同一纹理的一系列逐级缩小（边长减半）的副本，用于远处物体采样时减少闪烁并提升缓存效率 |
 
 
 
@@ -274,7 +288,7 @@ int main(int argc, char *argv[])
 
 一个对象（Object）是指一些选项的集合，**代表OpenGL状态的一个子集**，可以使用对象来记录状态
 
-通常把0penGL上下文比作一个大的结构体，包含很多子集
+通常把 OpenGL 上下文比作一个大的结构体，包含很多子集
 
 ![image-20220729182054940](doc/pic/README/image-20220729182054940.png)
 
@@ -284,12 +298,15 @@ int main(int argc, char *argv[])
 
 【重点】**示例：**
 
+> ⚠️ 下面的 `glGenObject` / `glBindObject` / `glSetObjectOption` / `GL_WINDOW_TARGET` **都不是真实存在的 OpenGL API**，它们只是 LearnOpenGL 用来讲解"对象 = 状态子集"这一概念的伪代码。真实的对应操作是 `glGenBuffers` / `glBindBuffer` / `glBufferData` 等（下一节即会看到）。
+
 ```cpp
 // 1. 创建对象
-GLuint objectId = 0;  // 创建一个 ID（GLuint 是 OpenGL 自己的 int 类型）
-glGenObject(1, &objectId);  // 生成了一个对象（小助理），并给他了一个编号
+GLuint objectId = 0;  // 创建一个 ID（GLuint 是 OpenGL 自己的 unsigned int 类型）
+glGenObject(1, &objectId);  // 生成 1 个对象（小助理），并给他了一个编号
 
 // 2. 绑定至上下文对象
+// “绑定”的本质是：修改上下文（context）中那张“绑定表”的某一行，让某个绑定点（target）指向某个对象
 glBindObject(GL_WINDOW_TARGET, objectId);  // 让这个对象【记录】状态机中子集 GL_WINDOW_TARGET 的状态，也就是确定工作内容
 
 // 3. 设置子集 GL_WINDOW_TARGET 的一些选项，以下两条的操作会被 objectId对象 记录
@@ -304,17 +321,18 @@ glBindObject(GL_WINDOW_TARGET, 0);  // 将objectId对象与GL_WINDOW_TARGET解�
 
 ![image-20220808195151096](doc/pic/README/image-20220808195151096.png)
 
-- 在进行使用 QOpenGLWidget 时，要首先要在初始化函数`initializeGL()` 中调用 `QOpenGLFunctions_X_X_Core::` 中的 init **将 Qt 里的函数指针指向显卡的函数（下图所示）**
+- 使用 `QOpenGLWidget` 时，要首先在初始化函数 `initializeGL()` 中调用 `QOpenGLFunctions_3_3_Core::initializeOpenGLFunctions()`，**把 Qt 里的函数指针解析到显卡驱动提供的实现上**（下图所示）。未调用它就直接使用 `gl*` 系列函数，会因函数指针为空而崩溃。
+- 因为：`QOpenGLWidget` 本身已继承 `QOpenGLFunctions`（只覆盖 OpenGL ES 2.0 的函数子集）；要使用 3.3 Core 的全部函数，才需要额外继承 `QOpenGLFunctions_3_3_Core`。
 
+  ![image-20220808195106987](doc/pic/README/image-20220808195106987.png)
 
-
-![image-20220808195106987](doc/pic/README/image-20220808195106987.png)
+  ![image-20261113153916953](doc/img/image-20261113153916953.png)
 
 
 
 # 你好，三角形
 
-<img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/b96de0784ceb4b7d8aee18e2096bba70~tplv-k3u1fbpfcp-watermark.awebp" alt="draw" style="zoom:50%;" />
+![img](doc/img/b96de0784ceb4b7d8aee18e2096bba70~tplv-k3u1fbpfcp-watermark.awebp)
 
 > https://learnopengl-cn.github.io/01%20Getting%20started/04%20Hello%20Triangle/
 >
@@ -332,25 +350,21 @@ glBindObject(GL_WINDOW_TARGET, 0);  // 将objectId对象与GL_WINDOW_TARGET解�
 
 
 
-图形渲染管线接受一组3D坐标，然后把它们转变为你屏幕上的有色2D像素输出。图形渲染管线可以被划分为几个阶段，每个阶段将会把前一个阶段的输出作为输入。所有这些阶段都是高度专门化的（它们都有一个特定的函数），并且很容易并行执行。正是由于它们具有并行执行的特性，当今大多数显卡都有成千上万的小处理核心，它们在GPU上为每一个（渲染管线）阶段运行各自的小程序，从而在图形渲染管线中快速处理你的数据。这些小程序叫做**着色器(Shader)。**
+图形渲染管线接受一组3D坐标，然后把它们转变为你屏幕上的有色2D像素输出。图形渲染管线可以被划分为几个阶段，每个阶段将会把前一个阶段的输出作为输入。所有这些阶段都是高度专门化的（它们都有一个特定的函数），并且很容易并行执行。正是由于它们具有**并行执行**的特性，当今大多数显卡都有成千上万的小处理核心，它们在GPU上为每一个（渲染管线）阶段运行各自的小程序，从而在图形渲染管线中快速处理你的数据。这些小程序叫做**着色器(Shader)。**
 
 
 
 有些着色器可以由开发者配置，因为允许用自己写的着色器来代替默认的，所以能够更细致地控制图形渲染管线中的特定部分了。因为它们运行在GPU上，所以节省了宝贵的CPU时间。**OpenGL着色器是用OpenGL着色器语言(OpenGL Shading Language, GLSL)写成的**
 
-
-
-
-
 ![img](https://learnopengl-cn.github.io/img/01/04/pipeline.png)
 
-1. 图形渲染管线的第一个部分是**==顶点着色器(Vertex Shader)==**，它把一个单独的顶点作为输入。顶点着色器主要的目的是把3D坐标转为另一种3D坐标（后面会解释），同时顶点着色器允许我们对顶点属性进行一些基本处理
+1. 图形渲染管线的第一个部分是**==顶点着色器(Vertex Shader)==**，它把**一个个**单独的顶点作为输入。顶点着色器主要的目的是把3D坐标转为另一种3D坐标（后面会解释），同时顶点着色器允许我们对顶点属性进行一些基本处理
 
 
 
-2. **==图元装配(Primitive Assembly)==阶段将顶点着色器输出的所有顶点作为输入（如果是GL_POINTS，那么就是一个顶点），并所有的点装配成指定图元的形状**；本节例子中是一个三角形。
+2. **==图元装配(Primitive Assembly)==阶段将顶点着色器输出的所有顶点作为输入（如果是 `GL_POINTS`，那么每次只有一个顶点），并将所有点装配成指定图元的形状**；本节例子中是一个三角形。
 
-    为**了让OpenGL知道我们的坐标和颜色值构成的到底是什么，OpenGL需要你去指定这些数据所表示的渲染类型**。我们是希望把这些数据渲染成一系列的点？一系列的三角形？还是仅仅是一个长长的线？**做出的这些提示叫做==图元(Primitive)==**，任何一个绘制指令的调用都将把图元传递给OpenGL。**这是其中的几个：GL_POINTS、GL_TRIANGLES、GL_LINE_STRIP。**
+    **为了让 OpenGL 知道我们的坐标和颜色值构成的到底是什么，OpenGL 需要你去指定这些数据所表示的渲染类型**。我们是希望把这些数据渲染成一系列的点？一系列的三角形？还是一条线？**做出的这些提示叫做==图元(Primitive)==**，任何一个绘制指令的调用都将把图元传递给 OpenGL。**这是其中的几个：`GL_POINTS`、`GL_TRIANGLES`、`GL_LINES`。**
 
 
 
@@ -358,7 +372,9 @@ glBindObject(GL_WINDOW_TARGET, 0);  // 将objectId对象与GL_WINDOW_TARGET解�
 
 
 
-4. 几何着色器的输出会被传入**==光栅化阶段(Rasterization Stage)==**，**这里它会把图元映射为最终屏幕上相应的像素，生成供片段着色器(Fragment Shader)使用的片段(Fragment | OpenGL中的一个片段是OpenGL渲染一个像素所需的所有数据)。在片段着色器运行之前会执行裁切(Clipping)。裁切会丢弃超出你的视图以外的所有像素，用来提升执行效率。**
+4. 几何着色器的输出会被传入**==光栅化阶段(Rasterization Stage)==**，**这里它会把图元映射为最终屏幕上相应的像素，生成供片段着色器(Fragment Shader)使用的片段(Fragment | OpenGL中的一个片段是OpenGL渲染一个像素所需的所有数据)。在片段着色器运行之前会执行裁剪(Clipping)，裁剪会切除图元位于裁剪体之外的部分，只保留落在裁剪体内的部分，用来提升执行效率。**
+
+   
 
 5. **==片段着色器==的主要目的是计算一个像素的最终颜色**，这也是所有OpenGL高级效果产生的地方。通常，片段着色器包含3D场景的数据（比如光照、阴影、光的颜色等等），这些数据可以被用来计算最终像素的颜色。
 
