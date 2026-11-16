@@ -155,6 +155,8 @@ https://ke.qq.com/course/package/40726?flowToken=1041265
 - Windows 下推荐 **Visual Studio 2019 / 2022**（MSVC v142 / v143）。
 - **C++11 或更高**（推荐 C++17）。
 
+![image-20261116104740013](doc/img/image-20261116104740013.png)
+
 
 
 **CMakeLists.txt 的编写：**
@@ -380,13 +382,15 @@ glBindObject(GL_WINDOW_TARGET, 0);  // 将objectId对象与GL_WINDOW_TARGET解�
 
 
 
-6. 在所有对应颜色值确定以后，最终的对象将会被传到最后一个阶段，我们叫做**==Alpha测试和混合(Blending)阶段==**。这个阶段检测片段的对应的深度（和模板(Stencil)）值（后面会讲），用它们来判断这个像素是其它物体的前面还是后面，决定是否应该丢弃。这个阶段也会检查alpha值（alpha值定义了一个物体的透明度）并对物体进行混合(Blend)。所以，即使在片段着色器中计算出来了一个像素输出的颜色，在渲染多个三角形的时候最后的像素颜色也可能完全不同。
+6. 在所有对应颜色值确定以后，最终的对象将会被传到最后一个阶段，即**==逐片段操作(Per-Fragment Operations)==**（旧称 Alpha 测试和混合阶段）。这个阶段先用深度（和模板 Stencil）值判断该片段是否被已有内容遮挡，决定是否应该丢弃；然后再按 alpha 值（定义物体的透明度）对物体进行混合(Blend)。所以，即使在片段着色器中算出了一个像素输出的颜色，在渲染多个三角形的时候最后的像素颜色也可能完全不同。
 
-    通常==**深度**==可以理解为z坐标，它代表一个像素在空间中和你的距离，如果离你远就可能被别的像素遮挡，你就看不到它了，它会被丢弃，以节省资源。
+    **需要说明的是**：`GL_ALPHA_TEST` 从 OpenGL 3.1 Core 起已被移除，核心模式下透明度只能通过混合实现。
+
+   通常==**深度**==可以理解为z坐标，它代表一个像素在空间中和你的距离，如果离你远就可能被别的像素遮挡，你就看不到它了，它会被丢弃，以节省资源。
 
 
 
-可以看到，图形渲染管线非常复杂，它包含很多可配置的部分。然而，**对于大多数场合，我们只需要配置顶点和片段着色器就行了**。几何着色器是可选的，通常使用它默认的着色器就行了。
+可以看到，图形渲染管线非常复杂，它包含很多可配置的部分。然而，**对于大多数场合，我们只需要配置顶点和片段着色器就行了**。几何着色器是**可选**的：不提供几何着色器时，该阶段会被整段跳过，顶点数据原样进入光栅化——它**并没有"默认的着色器"**。
 
 在现代OpenGL中，我们**必须**定义至少一个顶点着色器和一个片段着色器（因为GPU中没有默认的顶点/片段着色器）。出于这个原因，刚开始学习现代OpenGL的时候可能会非常困难，因为在你能够渲染自己的第一个三角形之前已经需要了解一大堆知识了。
 
@@ -402,7 +406,7 @@ glBindObject(GL_WINDOW_TARGET, 0);  // 将objectId对象与GL_WINDOW_TARGET解�
 
 ## VAO、VBO
 
-首先，我们以数组的形式传递3个3D坐标作为图形渲染管线的输入，用来表示一个三角形，这个数组叫做**顶点数据(Vertex Data)；顶点数据是一系列顶点的集合。一个顶点(Vertex)是一个3D坐标的数据的集合。而顶点数据是用顶点属性(Vertex Attribute)表示的，它可以包含任何我们想用的数据**，但是简单起见，我们还是假定每个顶点只由一个3D位置(译注1)和一些颜色值组成的吧。
+首先，我们以数组的形式传递3个3D坐标作为图形渲染管线的输入，用来表示一个三角形。这个数组叫做**顶点数据(Vertex Data)**，它是一系列顶点的集合。一个顶点(Vertex)是一组**顶点属性(Vertex Attribute)**的集合（至少包含位置），而每个属性可以包含任何我们想用的数据；不过为简单起见，我们还是假定每个顶点只由一个3D位置和一些颜色值组成吧。
 
 
 
@@ -410,9 +414,9 @@ glBindObject(GL_WINDOW_TARGET, 0);  // 将objectId对象与GL_WINDOW_TARGET解�
 
 顶点数据（`Vertex DATA[]`）的传递 -> 我们要将内存里的数据传递到显卡里
 
-1. **顶点着色器**（自己写在 `XXXOpenGLWedget::initializeGL()` 中）
+1. **顶点数据上传与顶点着色器**（顶点数据准备、VBO/VAO 配置与着色器编写，均写在 `XXXOpenGLWidget::initializeGL()` 中）
 
-    - 通过**顶点缓冲对象 `Vertex Buffer Objects, VBO`**管理，顶点缓冲对象的缓冲**类型是** `GL_ARRAY_BUFFER`。它会在 GPU 上创建内存，用于储存我们的大量顶点数据（将数据从内存读取到显存，一个缓冲区一个缓冲区的填充）。使用这些缓冲对象的好处是我们可以一次性的发送一大批数据到显卡上，而不是每个顶点发送一次。从CPU把数据发送到显卡相对较慢，所以只要可能我们都要尝试尽量一次性发送尽可能多的数据。当数据发送至显卡的内存中后，顶点着色器几乎能立即访问顶点，这是个非常快的过程。
+    - 通过**顶点缓冲对象 `Vertex Buffer Objects, VBO`** ==管理（注意是“管理”不是存储）==，顶点缓冲对象的缓冲**类型是** `GL_ARRAY_BUFFER`。它会在 GPU 上创建内存，用于储存我们的大量顶点数据（将数据从内存读取到显存，一个缓冲区一个缓冲区的填充）。使用这些缓冲对象的好处是我们可以一次性的发送一大批数据到显卡上，而不是每个顶点发送一次**。从CPU把数据发送到显卡相对较慢，所以只要可能我们都要尝试尽量一次性发送尽可能多的数据。当数据发送至显卡的内存中后，顶点着色器几乎能立即访问顶点，这是个非常快的过程。**
 
       ​    
 
@@ -424,29 +428,31 @@ glBindObject(GL_WINDOW_TARGET, 0);  // 将objectId对象与GL_WINDOW_TARGET解�
 
         顶点**数组**对象(Vertex Array Object, VAO)可以像顶点**缓冲**对象（VBO）那样被绑定，任何随后的顶点属性调用都会储存在这个VAO中。这样的好处就是，当配置顶点属性指针时，你只需要将那些调用执行一次，之后再绘制物体的时候只需要绑定相应的VAO就行了。这使在不同顶点数据和属性配置之间切换变得非常简单，只需要绑定不同的VAO就行了。
 
-        > **OpenGL的核心模式**要求**我们使用VAO，所以它知道该如何处理我们的顶点输入。如果我们绑定VAO失败，OpenGL会拒绝绘制任何东西。**
+        > **OpenGL 的核心模式**要求我们使用 VAO，这样它才知道该如何处理我们的顶点输入。**如果在发起绘制时没有绑定任何 VAO（或 VAO 中没有启用任何属性数组、VAO 绑定失败），核心模式会拒绝绘制。**
 
         
 
         一个顶点数组对象会储存以下这些内容：
 
-        - `glEnableVertexAttribArray`和`glDisableVertexAttribArray`的调用。
+        - `glEnableVertexAttribArray` 和 `glDisableVertexAttribArray`的调用。
 
-        - 通过`glVertexAttribPointer`设置的顶点属性配置。
+        - 通过 `glVertexAttribPointer` 设置的顶点属性配置。
 
-        - 通过`glVertexAttribPointer`调用与顶点属性关联的顶点缓冲对象
+        - 通过 `glVertexAttribPointer`调 用与顶点属性关联的顶点缓冲对象
 
           ​    
 
-        要想使用VAO，要做的只是使用`glBindVertexArray`绑定VAO。从绑定之后起，我们应该绑定和配置对应的VBO和属性指针，之后解绑VAO供之后使用。当我们打算绘制一个物体的时候，我们只要在绘制物体前简单地把VAO绑定到希望使用的设定上就行了。这段代码应该看起来像这样：
+        要想使用VAO，要做的只是使用 `glBindVertexArray` 绑定 VAO。从绑定之后起，我们应该绑定和配置对应的VBO和属性指针，之后解绑 VAO 供之后使用。当我们打算绘制一个物体的时候，我们只要在绘制物体前简单地把 VAO 绑定到希望使用的设定上就行了。这段代码应该看起来像这样：
 
         ```c++
         // ..:: 初始化代码（只运行一次 (除非你的物体频繁改变)） :: ..
-        // 1. 绑定VAO
+        // 1. 绑定 VAO
         glBindVertexArray(VAO);
+        
         // 2. 把顶点数组复制到缓冲中供OpenGL使用
         glBindBuffer(GL_ARRAY_BUFFER, VBO);
         glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+        
         // 3. 设置顶点属性指针
         glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
         glEnableVertexAttribArray(0);
@@ -460,8 +466,8 @@ glBindObject(GL_WINDOW_TARGET, 0);  // 将objectId对象与GL_WINDOW_TARGET解�
         someOpenGLFunctionThatDrawsOurTriangle();
         ```
 
-        就这么多了！前面做的一切都是等待这一刻，一个储存了我们顶点属性配置和应使用的VBO的顶点数组对象。一般当你打算绘制多个物体时，你首先要生成/配置所有的VAO（和必须的VBO及属性指针)，然后储存它们供后面使用。**当我们打算绘制物体的时候就拿出相应的VAO，绑定它，绘制完物体后，再解绑VAO。**
-
+        就这么多了！前面做的一切都是等待这一刻，一个储存了我们顶点属性配置和应使用的 VBO 的顶点数组对象。一般当你打算绘制多个物体时，你首先要生成/配置所有的 VAO（和必须的 VBO 及属性指针)，然后储存它们供后面使用。**当我们打算绘制物体的时候就拿出相应的 VAO，绑定它，绘制完物体后，再解绑VAO。**
+        
         
 
     <img src="doc/pic/README/image-20220812155627459.png" alt="image-20220812155627459" style="zoom:50%;" />
@@ -475,49 +481,58 @@ glBindObject(GL_WINDOW_TARGET, 0);  // 将objectId对象与GL_WINDOW_TARGET解�
     };
     
     // 创建 VAO 和 VBO 对象并且赋予 ID
-    unsigned int VAO, VBO;
-    glGenVertexArrays(1, &VAO);  // Array 存放数据结构的定义
+    unsigned int VAO = 0;
+    unsigned int VBO = 0;
+    glGenVertexArrays(1, &VAO);  // Array 存放数据结构的【定义】
     glGenBuffers(1, &VBO);  // Buffer 缓冲区才是真正存放顶点数据的
     
     // 绑定 VAO、VBO 对象
-    glBindVertexArray(VAO);  // 【重点】VAO会储存glBindBuffer的函数调用
-    glBindBuffer(GL_ARRAY_BUFFER, VBO); // 新创建的缓冲绑定到GL_ARRAY_BUFFER目标上，顶点缓冲对象的缓冲类型是GL_ARRAY_BUFFER
+    // 【重点】VAO 会记录：每个顶点属性的格式与启用状态、以及 GL_ELEMENT_ARRAY_BUFFER 的绑定；
+    //         它【不】记录 GL_ARRAY_BUFFER 的绑定（VBO 绑定是全局状态，与 VAO 无关）
+    glBindVertexArray(VAO);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO); // 新创建的缓冲绑定到 GL_ARRAY_BUFFER 目标上，顶点缓冲对象的缓冲类型是 GL_ARRAY_BUFFER
     
     
-    /* glBufferData是一个专门用来把用户定义的数据复制到当前绑定缓冲的函数。它的第一个参数是目标缓冲的类型：顶点缓冲对象当前绑定到GL_ARRAY_BUFFER目标上。第二个参数指定传输数据的大小(以字节为单位)；用一个简单的sizeof计算出顶点数据大小就行。第三个参数是我们希望发送的实际数据。
+    /* glBufferData 是一个专门用来把用户定义的数据复制到当前绑定缓冲的函数。它的第一个参数是目标缓冲的类型：顶点缓冲对象当前绑定到GL_ARRAY_BUFFER 目标上。第二个参数指定传输数据的大小(以字节为单位)；用一个简单的sizeof计算出顶点数据大小就行。第三个参数是我们希望发送的实际数据。
     	为当前绑定到 target 的缓冲区对象创建一个新的数据存储（在 GPU 上创建对应的存储区域，并将内存中的数据发送过去）
     	如果 data 不是 NULL，则使用来自此指针的数据初始化数据存储
-    	void glBufferData(GLenum target,  // 目标缓冲的类型，需要在 GPU 上创建的目标
-    										GLsizeipter size,  // 创建的显存大小(以字节为单位)
-    										const GLvoid* data,  // 希望发送的实际数据
-    										GLenum usage)  // 创建在 GPU 上的哪一片区域（显存上的每个区域的性能是不一样的）https://registry.khronos.org/OpenGL-Refpages/es3.0/
-    										GL_STATIC_DRAW ：数据不会或几乎不会改变。
-    										GL_DYNAMIC_DRAW：数据会被改变很多。
-    										GL_STREAM_DRAW ：数据每次绘制时都会改变。
+    	void glBufferData(
+        	GLenum target,  // 目标缓冲的类型，需要在 GPU 上创建的目标
+            GLsizeiptr size,  // 创建的显存大小(以字节为单位)
+            const GLvoid* data,  // 希望发送的实际数据
+            GLenum usage)  // 用途提示：告诉驱动这份数据的访问模式，驱动据此决定存储策略（并非"选择显存的某一区域"）
+            // 参考：https://registry.khronos.org/OpenGL-Refpages/gl4/html/glBufferData.xhtml
+            GL_STATIC_DRAW ：数据不会或几乎不会改变。
+            GL_DYNAMIC_DRAW：数据会被改变很多。
+            GL_STREAM_DRAW ：数据每次绘制时都会改变。
     */
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);  // 现在我们已经把顶点数据储存在显卡的内存中，用VBO这个顶点缓冲对象管理
     
     /* 告知显卡如何解析缓冲区里面的属性值（设置顶点属性指针）
     	void glVertexAttribPointer(
-    															GLuint index,  // VAO 中的第几个属性（VAO 属性的索引），我们在顶点着色器中使用layout(location = 0)定义了
-    															GLint size,  // 顶点属性的大小，VAO 中的第几个属性中对应的位置放几份数据，顶点属性是一个vec3，它由3个值组成，所以大小是3
-    															GLEnum type,  // 存放数据的数据类型，这里是GL_FLOAT(GLSL中vec*都是由浮点数值组成的)
-    															GLboolean normalized,  // 是否标准化(Normalize)，如设置为GL_TRUE，所有数据都会被映射到0（对于有符号型signed数据是-1）到1之间。
-    															GLsizei stride,  // 步长(Stride)，它告诉我们在连续的顶点属性组之间的间隔。我们也可以设置为0来让OpenGL决定具体步长是多少（只有当数值是紧密排列时才可用）
-    															const void* offset  // 位置数据在缓冲中起始位置的偏移量
+            GLuint index,  // VAO 中的第几个属性（VAO 属性的索引），我们在顶点着色器中使用layout(location = 0)定义了
+            GLint size,  // 顶点属性的大小，VAO 中的第几个属性中对应的位置放几份数据，顶点属性是一个vec3，它由3个值组成，所以大小是3
+            GLEnum type,  // 存放数据的数据类型，这里是GL_FLOAT(GLSL中vec*都是由浮点数值组成的)
+            GLboolean normalized,  // 是否标准化(Normalize)，如设置为GL_TRUE，所有数据都会被映射到0（对于有符号型signed数据是-1）到1之间。
+            GLsizei stride,  // 步长(Stride)，相邻两个顶点之间的字节间隔。传 0 表示属性在缓冲中紧密排列，步长自动取 size * sizeof(type)
+            const void* offset  // 位置数据在缓冲中起始位置的偏移量
     	)
     */
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);  // 第一个属性，所以不需要偏移
     
     // 开始 VAO 管理的第一个属性值
+    // 把索引 0 这个顶点属性数组从“关闭”改为“开启”，此后每次 glDrawArrays、glDrawElements 时，着色器里 location = 0 的 in 变量才会真正从缓冲里逐顶点取数据。
     glEnableVertexAttribArray(0);
     
-    // 解绑 VAO 和 VBO ???将两行反过来写，试试还能不能绘制???
+    // 解绑 VAO 和 VBO
+    // 顺序有讲究：先解绑 VAO，再解绑 VBO。
+    // 因为 VBO 的绑定（GL_ARRAY_BUFFER）不记入 VAO，所以事先解绑它没有副作用；
+    // 但 EBO 的绑定【会】记入 VAO——若先解绑 EBO，该 VAO 就会记下"EBO = 0"，绘制时索引数据将丢失。
     glBindVertexArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     ```
 
-    **编写完上述代码之后，如果要使用的话，需要在 `XXXOpenGLWedget::paintGL()` 中重新绑定 VAO 和 VBO：**
+    **编写完上述代码之后，如果要使用的话，需要在 `XXXOpenGLWidget::paintGL()` 中绑定对应的 VAO（VBO 无需再绑定，它的绑定已由 VAO 中的属性配置记录）：**
 
     ```c++
     glBindVertexArray(VAO);
@@ -539,13 +554,13 @@ glBindObject(GL_WINDOW_TARGET, 0);  // 将objectId对象与GL_WINDOW_TARGET解�
 
 
 
-**标准化设备坐标**：(Normalized Device Coordinates, NDC) 顶点着色器中处理过后，就应该是标准化设备坐标了，x、y和Z的值在-1.0到1.0的一小段空间（立方体）。 落在范围外的坐标都会被裁剪，因为 GPU 没有必要再去消耗算力去进行计算
+**标准化设备坐标**：(Normalized Device Coordinates, NDC) 顶点着色器输出的是**裁剪空间**坐标，经透视除法（各分量除以 w）后才得到 NDC，此时 x、y、z 的值落在 `[-1.0, 1.0]` 的立方体内。超出该范围的部分会被裁剪——因为这些内容本来就不可见，不必再为其光栅化，GPU 没有必要再去消耗算力去进行计算。
 
 
 
 ## 编译着色器
 
-> https://www.imgeek.org/article/825358359
+> 参考：[Shader - Khronos OpenGL Wiki](https://www.khronos.org/opengl/wiki/Shader) ｜ [LearnOpenGL CN：着色器](https://learnopengl-cn.github.io/01%20Getting%20started/05%20Shaders/)
 
 **渲染管线的作用是将3D模型转换为2维图像。**
 
