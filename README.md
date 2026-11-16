@@ -192,7 +192,6 @@ target_link_libraries(
 
 
 
-**在使用 Qt 下，对于 M 系列芯片应该编写如下 .pro文件：**
 
 **在使用 Qt 时，`.pro` 文件需要包含如下模块：**
 
@@ -358,7 +357,7 @@ glBindObject(GL_WINDOW_TARGET, 0);  // 将objectId对象与GL_WINDOW_TARGET解�
 
 有些着色器可以由开发者配置，因为允许用自己写的着色器来代替默认的，所以能够更细致地控制图形渲染管线中的特定部分了。因为它们运行在GPU上，所以节省了宝贵的CPU时间。**OpenGL着色器是用OpenGL着色器语言(OpenGL Shading Language, GLSL)写成的**
 
-![img](https://learnopengl-cn.github.io/img/01/04/pipeline.png)
+![opengl_pipeline_3.3_core_fixed](doc/img/opengl_pipeline_3.3_core_fixed.svg)
 
 1. 图形渲染管线的第一个部分是**==顶点着色器(Vertex Shader)==**，它把**一个个**单独的顶点作为输入。顶点着色器主要的目的是把3D坐标转为另一种3D坐标（后面会解释），同时顶点着色器允许我们对顶点属性进行一些基本处理
 
@@ -418,13 +417,13 @@ glBindObject(GL_WINDOW_TARGET, 0);  // 将objectId对象与GL_WINDOW_TARGET解�
 
     - 通过**顶点缓冲对象 `Vertex Buffer Objects, VBO`** ==管理（注意是“管理”不是存储）==，顶点缓冲对象的缓冲**类型是** `GL_ARRAY_BUFFER`。它会在 GPU 上创建内存，用于储存我们的大量顶点数据（将数据从内存读取到显存，一个缓冲区一个缓冲区的填充）。使用这些缓冲对象的好处是我们可以一次性的发送一大批数据到显卡上，而不是每个顶点发送一次**。从CPU把数据发送到显卡相对较慢，所以只要可能我们都要尝试尽量一次性发送尽可能多的数据。当数据发送至显卡的内存中后，顶点着色器几乎能立即访问顶点，这是个非常快的过程。**
 
-      ​    
+      
 
     - OpenGL 允许我们同时绑定多个缓冲，只要它们是不同的缓冲类型
 
       ​    
 
-    - 配置 OpenGL 如何解释这些内存：通过**顶点数组对象 `Vertex Array Objects, VAO`** 管理，**VAO 的数据类型是唯一的，数组里的每一个项都对应一个属性的解析（类似一个类 | 结构体）**。的
+    - 配置 OpenGL 如何解释这些内存：通过**顶点数组对象 `Vertex Array Objects, VAO`** ==管理==。**VAO 不保存顶点数据本身，只记录"属性布局"——数组里配置的每一项都描述一个顶点属性如何从缓冲中解析（类似于一个 struct 的字段表）**。
 
         顶点**数组**对象(Vertex Array Object, VAO)可以像顶点**缓冲**对象（VBO）那样被绑定，任何随后的顶点属性调用都会储存在这个VAO中。这样的好处就是，当配置顶点属性指针时，你只需要将那些调用执行一次，之后再绘制物体的时候只需要绑定相应的VAO就行了。这使在不同顶点数据和属性配置之间切换变得非常简单，只需要绑定不同的VAO就行了。
 
@@ -566,11 +565,11 @@ glBindObject(GL_WINDOW_TARGET, 0);  // 将objectId对象与GL_WINDOW_TARGET解�
 
 - **顶点着色器**
 
-    就是和GPU打交道，在GPU上运行的代码是一对着色器，一个是顶点着色器，另一个是片段着色器。每次调用着色程序都会先执行顶点着色器，再执行片元着色器。
+    在GPU上运行的代码主要是两类着色器：一个是顶点着色器，另一个是片段着色器。**顶点着色器对每个顶点各执行一次**；光栅化之后**片段着色器对每个片段各执行一次**。二者是"一对多"的关系，并不存在"每次调用着色程序都先跑完顶点着色器、再跑完片段着色器"这样的整体顺序。
 
     一个顶点着色器的工作是生成裁剪空间坐标值，是用着色器语言GLSL(OpenGL Shading Language)编写：
 
-    ```c++
+    ```glsl
     #version 330 core
     layout (location = 0) in vec3 aPos;
     
@@ -580,25 +579,25 @@ glBindObject(GL_WINDOW_TARGET, 0);  // 将objectId对象与GL_WINDOW_TARGET解�
     }
     ```
 
-    可以看到，GLSL看起来很像C语言。每个着色器都起始于一个版本声明。OpenGL 3.3以及和更高版本中，GLSL版本号和OpenGL的版本是匹配的（比如说GLSL 420版本对应于OpenGL 4.2）。我们同样明确表示我们会使用核心模式。
+    可以看到，GLSL看起来很像C语言。每个着色器都起始于一个版本声明。在 OpenGL 3.3 及更高版本中，GLSL 版本号与 OpenGL 版本号是对应的（比如说 GLSL 420 版本对应于 OpenGL 4.2）；**这个对应关系只从 3.3 起成立**，更早的版本并不对应（例如 OpenGL 3.1 对应 GLSL 1.40）。我们同样明确表示我们会使用核心模式。
 
     
 
-    下一步，使用`in`关键字，在顶点着色器中声明所有的输入顶点属性(Input Vertex Attribute)。现在我们只关心位置(Position)数据，所以我们只需要一个顶点属性。GLSL有一个向量数据类型，它包含1到4个`float`分量，包含的数量可以从它的后缀数字看出来。由于每个顶点都有一个3D坐标，我们就创建一个`vec3`输入变量aPos。我们同样也通过`layout (location = 0)`设定了输入变量的位置值(Location)你后面会看到为什么我们会需要这个位置值。
+    下一步，使用`in`关键字，在顶点着色器中声明所有的输入顶点属性(Input Vertex Attribute)。现在我们只关心位置(Position)数据，所以我们只需要一个顶点属性。GLSL 有一个向量数据类型，它包含 **2、3 或 4 个** `float` 分量（**没有 `vec1`**，单个标量是独立类型 `float`/`int`/`bool`），分量数量可以从后缀数字看出来。由于每个顶点都有一个3D坐标，我们就创建一个`vec3`输入变量 aPos。我们同样也通过 `layout (location = 0)` 设定了输入变量的位置值(Location)你后面会看到为什么我们会需要这个位置值。
 
     
 
     > **向量(Vector)**
     >
-    > 在图形编程中我们经常会使用向量这个数学概念，因为它简明地表达了**任意空间中的位置和方向**，并且它有非常有用的数学属性。在GLSL中一个向量有最多4个分量，每个分量值都代表空间中的一个坐标，它们可以通过`vec.x`、`vec.y`、`vec.z`和`vec.w`来获取。注意`vec.w`分量不是用作表达空间中的位置的（我们处理的是3D不是4D），而是用在所谓透视除法(Perspective Division)上。我们会在后面的教程中更详细地讨论向量。
+    > 在图形编程中我们经常会使用向量这个数学概念，因为它简明地表达了**任意空间中的位置和方向**，并且它有非常有用的数学属性。在 GLSL 中一个向量有最多4个分量，每个分量值都代表空间中的一个坐标，它们可以通过 `vec.x`、`vec.y`、`vec.z` 和 `vec.w` 来获取。注意 `vec.w` 分量不是用作表达空间中的位置的（我们处理的是3D不是4D），而是用在所谓透视除法(Perspective Division)上。我们会在后面的教程中更详细地讨论向量。
 
     
 
-    每个顶点调用一次（顶点）着色器，每次调用都需要设置一个特殊的全局变量 **gl_Position**。 该变量的值就是裁减空间坐标值。何为裁剪空间坐标？就是无论你的画布有多大，裁剪坐标的坐标范围永远是 -1 到 1 。
+    每个顶点调用一次（顶点）着色器，每次调用都需要设置一个特殊的全局变量 **gl_Position**。 该变量的值就是**裁剪空间(Clip Space)**坐标值。裁剪空间的坐标范围是 `[-w, w]`（每个分量都落在这个范围内才可见，就是无论你的画布有多大，裁剪坐标的坐标范围永远是 -w 到 +w ）；只有在后续的**透视除法**（各分量除以 w）之后，坐标才变成范围固定在 -1 到 1 的**标准化设备坐标(NDC)**。
 
     <img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/71c4328e45884accbf3138cbc9336d99~tplv-k3u1fbpfcp-watermark.awebp" alt="裁剪坐标系" style="zoom:30%;" />
 
-    如果运行一次顶点着色器， 那么gl_Position 就是 **（-0.5，-0.5，0，1）** 记住他永远是个 **Vec4**, 简单理解就是对应**x、y、z、w**。即使你没用其他的，也要设置默认值， 这就是所谓的 3维模型转换到我们屏幕中。
+    以本文三角形**第一个顶点 `(-0.5, -0.5, 0.0)`** 为例，运行一次顶点着色器后 `gl_Position` 就是 **（-0.5，-0.5，0，1）**。记住它永远是个 **Vec4**，简单理解就是对应**x、y、z、w**。即使你没用其他的，也要设置默认值（本例中 w 设为 1.0，表示这是个位置而非方向）。这就是所谓的"3 维模型转换到我们屏幕中"的第一步。
 
     
 
@@ -608,11 +607,13 @@ glBindObject(GL_WINDOW_TARGET, 0);  // 将objectId对象与GL_WINDOW_TARGET解�
 
     **顶点着色器的编译过程：**
 
-    这个过程类似于 CPP 的（编写、编译、链接）过程；我们通过在 CPP 中编写、编译、链接面向 GPU 的代码
+    这个过程类似于 C/C++ 的（编写、编译、链接）过程；我们通过在 C/C++ 中编写、编译、链接面向 GPU 的代码。
+
+    **关键差别**：C/C++ 是编译期完成（AOT），而 GLSL 是**运行时编译**——由驱动在调用 `glCompileShader` 时才把源码编译成 GPU 指令（多数实现会即时编译/JIT），**因此着色器源码写错只会在程序运行时才会报错。**
 
     1. **编写源码**（最好作为全局或成员变量）
 
-        现在，我们暂时将顶点着色器的*GLSL源代码*硬编码在代码文件顶部的C风格字符串中：
+        现在，我们暂时将顶点着色器的 *GLSL 源代码*硬编码在代码文件顶部的C风格字符串中：
 
         ```c++
         // 【原码】顶点着色器就是把 xyz 原封不动的送出去
@@ -621,53 +622,53 @@ glBindObject(GL_WINDOW_TARGET, 0);  // 将objectId对象与GL_WINDOW_TARGET解�
                                          "void main()\n"
                                          "{\n"
                                          "   gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
-                                         "}\0";
+                                         "}";
         ```
 
-        为了能够让OpenGL使用它，我们必须在**运行时动态编译它的GLSL源代码**。
-
-    1. **编译顶点着色器**（写在 `XXXOpenGLWedget::initializeGL()` 中）
-
+        为了能够让 OpenGL 使用它，我们必须在**运行时动态编译它的 GLSL 源代码**。
+        
+    2. **编译顶点着色器**（写在 `XXXOpenGLWidget::initializeGL()` 中）
+    
         ```c++
         unsigned int vertexShader = glCreateShader(GL_VERTEX_SHADER);  // 创建顶点着色器（框架 | 对象）并给予编号，由于我们正在创建一个【顶点】着色器，传递的参数是GL_VERTEX_SHADER。
         
         /* 绑定至着色器原码
         	void glShaderSource(
-        											GLuint shader,  要着色器框架 | 对象
-        											GLsize count,  着色器字符串的数量
-        											const CLchar** string,  着色器源码字符串
-        											const GLint* length  着色器源码的长度，如果是单个字符串可以填 NULL（代表源码字符串以 NULL 结尾）
+                  GLuint shader,  // 着色器框架 | 对象
+                  GLsizei count,  // 着色器字符串的数量
+                  const GLchar* const* string,  // 着色器源码字符串
+                  const GLint* length  // 着色器源码的长度，如果是单个字符串可以填 NULL（代表源码字符串以 NULL 结尾）
         	)
         
         */
         glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);  // 绑定至着色器原码
         
-        glCompileSharder(vertexShader);  // 编译着色器
+        glCompileShader(vertexShader);  // 编译着色器
         
-        /* 因为可能出错，所以进行错误检查，也就是判断时候成功编译 */
-        int success;  // 是否成功的标志
+        /* 因为可能出错，所以进行错误检查，也就是判断是否成功编译 */
+        int success = 0;  // 是否成功的标志
         char infolog[512];  // 错误日志（信息）
-        glGetShaderiv(vertexShader, GL_COMPILES_TATUS, &success);  // 检查是否编译成功
+        glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);  // 检查是否编译成功
         if(!success)
         {
           glGetShaderInfoLog(vertexShader, 512, NULL, infolog);  // 获取错误消息
           qDebug() << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infolog;
         }
         ```
-
-        
-
+    
+        ---
+    
 - **片段着色器**
 
-    片段着色器(Fragment Shader)是第二个也是最后一个我们打算创建的用于渲染三角形的着色器。片段着色器所做的是计算像素最后的颜色输出。
+    片段着色器(Fragment Shader)是第二个也是最后一个我们打算创建的用于渲染三角形的着色器。**片段着色器所做的是计算像素最后的颜色输出。**
 
-    > 在计算机图形中颜色被表示为有4个元素的数组：红色、绿色、蓝色和alpha(透明度)分量，通常缩写为RGBA。当在OpenGL或GLSL中定义一个颜色的时候，我们把颜色每个分量的强度设置在0.0到1.0之间。比如说我们设置红为1.0f，绿为1.0f，我们会得到两个颜色的混合色，即黄色。这三种颜色分量的不同调配可以生成超过1600万种不同的颜色！
+    > 在计算机图形中颜色被表示为有4个元素的数组：红色、绿色、蓝色和 alpha (透明度) 分量，通常缩写为 RGBA。当在OpenGL 或 GLSL 中定义一个颜色的时候，我们把颜色每个分量的强度设置在 0.0 到 1.0 之间。比如说我们设置红为 1.0f，绿为 1.0f，我们会得到两个颜色的混合色，即黄色。三种颜色分量按每通道 8 位量化时，可以组合出约 1678 万（2²⁴）种不同的颜色！
 
     
 
     1. **编写源码**
 
-        片段着色器只需要一个输出变量，这个变量是一个4分量向量，它表示的是最终的输出颜色，我们应该自己将其计算出来。声明输出变量可以使用`out`关键字，这里我们命名为`FragColor`。下面，我们将一个Alpha值为1.0(1.0代表完全不透明)的橘黄色的`vec4`赋值给颜色输出。
+        片段着色器只需要一个输出变量，这个变量是一个4分量向量，它表示的是最终的输出颜色，我们应该自己将其计算出来。声明输出变量可以使用 `out` 关键字，这里我们命名为 `FragColor`。下面，我们将一个 Alpha值为1.0 (1.0代表完全不透明)的**橙色**的 `vec4` 赋值给颜色输出。
 
     ```c++
     // 【原码】片段着色器就是给一个固定的颜色
@@ -676,12 +677,12 @@ glBindObject(GL_WINDOW_TARGET, 0);  // 将objectId对象与GL_WINDOW_TARGET解�
                                        "void main()\n"
                                        "{\n"
                                        "   FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
-                                       "}\n\0";
+                                       "}";
     ```
 
     
 
-    2. **编译片段着色器**（写在 `XXXOpenGLWedget::initializeGL()` 中）
+    2. **编译片段着色器**（写在 `XXXOpenGLWidget::initializeGL()` 中）
 
     过程跟编译顶点着色器的框架是一样的，用的是同一套函数
 
@@ -690,9 +691,8 @@ glBindObject(GL_WINDOW_TARGET, 0);  // 将objectId对象与GL_WINDOW_TARGET解�
     glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);  // 绑定至着色器原码
     glCompileShader(fragmentShader);  // 编译着色器
     
-    /* 因为可能出错，所以进行错误检查，也就是判断时候成功编译 */
-    // int success;  // 是否成功的标志
-    // char infolog[512];  // 错误日志（信息）
+    /* 因为可能出错，所以进行错误检查，也就是判断是否成功编译 */
+    success = 0;  // 复用上一段声明的 success / infolog，这里重置标志
     glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
     if(!success)
     {
@@ -707,30 +707,32 @@ glBindObject(GL_WINDOW_TARGET, 0);  // 将objectId对象与GL_WINDOW_TARGET解�
 
 ## 链接着色器为着色器程序
 
-在进行完上面一节的着色器编写和编译后，需要**将顶点着色器和片段着色器进行链接*（就像 CPP 生成可执行文件的顺序那样：编写(.cpp) ->编译(.o) ->链接(.exe)）***
+在进行完上面一节的着色器编写和编译后，需要**将顶点着色器和片段着色器进行链接**（就像 C/C++ 生成可执行文件的顺序那样：编写 `.cpp` → 编译 `.o` → 链接可执行文件）
 
-**着色器程序对象(Shader Program Object)是多个着色器合并之后并最终链接完成的版本**。如果**要使用刚才编译的着色器我们必须把它们链接(Link)为一个着色器程序对象，然后在渲染对象的时候激活这个着色器程序**。已激活着色器程序的着色器将在我们发送渲染调用的时候被使用。
+**着色器程序对象(Shader Program Object)是多个着色器合并之后并最终链接完成的版本**。如果**要使用刚才编译的着色器我们必须把它们链接(Link)为一个着色器程序对象，然后在渲染对象的时候激活这个着色器程序**。已激活的着色器程序将在我们发送渲染调用的时候被使用。
 
-当链接着色器至一个程序的时候，它会把每个着色器的输出链接到下个着色器的输入。当输出和输入不匹配的时候，你会得到一个连接错误
+当链接着色器至一个程序的时候，它会把每个着色器的输出链接到下个着色器的输入。当输出和输入不匹配的时候，你会得到一个链接错误
 
 ```c++
 /* 链接顶点着色器和片段着色器，并生成最后的着色器程序 */
 unsigned int shaderProgram = glCreateProgram();  // 注意，这里是 `glCreateProgram()`，因为链接之后生成的便是最后的程序
-glAttahcShader(shaderProgram, vertexShader);  // 加入顶点着色器
+glAttachShader(shaderProgram, vertexShader);  // 加入顶点着色器
 glAttachShader(shaderProgram, fragmentShader);  // 加入片段着色器
 glLinkProgram(shaderProgram);  // 链接
 
-/* 因为可能出错，所以进行错误检查，也就是判断时候成功链接 */
-// int success;  // 是否成功的标志
-// char infolog[512];  // 错误日志（信息）
-glGetShaderiv(shaderProgram, GL_LINK_STATUS, &success);
+/* 因为可能出错，所以进行错误检查，也就是判断是否成功链接 */
+/* 注意：检查【程序对象】必须用 glGetProgramiv / glGetProgramInfoLog，
+   用 glGetShaderiv / glGetShaderInfoLog 会因句柄无效而失败，链接错误永远检测不到 */
+success = 0;  // 复用前面声明的 success / infolog，这里重置标志
+glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
 if(!success)
 {
-  glGetShaderInfoLog(shaderProgram, 512, NULL, infolog);
+  glGetProgramInfoLog(shaderProgram, 512, NULL, infolog);
   qDebug() << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n" << infolog;
 }
 
-/* 在把着色器对象链接到程序对象以后，删除已经不需要的编译的结果 */
+/* 在把着色器对象链接到程序对象以后，删除已经不需要的编译的结果。
+   程序对象内部会持有编译结果（引用计数），所以此处删除是安全的 */
 glDeleteShader(vertexShader);
 glDeleteShader(fragmentShader);
 ```
@@ -739,7 +741,7 @@ glDeleteShader(fragmentShader);
 
 得到的结果就是一个程序对象，我们可以调用`glUseProgram`函数，用刚创建的程序对象作为它的参数，以激活这个程序对象：
 
-*在 `XXXOpenGLWedget::paintGL()` 中使用（开启）着色器*
+*在 `XXXOpenGLWidget::paintGL()` 中使用（开启）着色器*
 
 ```c++
 glUseProgram(shaderProgram);
@@ -769,7 +771,7 @@ glDrawArrays(GL_TRIANGLES, 0, 3);
 - 第二个参数指定了顶点数组的起始索引，我们这里填`0`。
 - 最后一个参数指定我们打算**绘制多少个顶点**，这里是`3`（我们只从我们的数据中渲染一个三角形，它只有3个顶点长）。
 
-现在尝试编译代码，如果弹出了任何错误，回头检查你的代码。如果你编译通过了，你应该看到下面的结果：
+现在尝试编译代码，若编译或链接报错，回头检查你的代码（着色器源码的报错只会在运行时的日志里出现，注意看 `qDebug()` 的输出）。如果你编译运行通过了，你应该看到下面的结果：
 
 ![img](https://learnopengl-cn.github.io/img/01/04/hellotriangle.png)
 
@@ -779,7 +781,7 @@ glDrawArrays(GL_TRIANGLES, 0, 3);
 
 ## EBO 元素缓冲对象
 
-元素缓冲对象(Element Buffer Object，EBO)，也叫索引缓冲对象(Index Buffer Object，IBO)
+**元素缓冲对象(Element Buffer Object，EBO)**，也叫索引缓冲对象(Index Buffer Object，IBO)
 
 假设我们不再绘制一个三角形而是绘制一个矩形。我们可以绘制两个三角形来组成一个矩形（OpenGL主要处理三角形）。这会生成下面的顶点的集合：
 
@@ -796,7 +798,9 @@ float vertices[] = {
 };
 ```
 
-可以看到，有几个顶点叠加了。我们指定了`右下角`和`左上角`两次！一个矩形只有4个而不是6个顶点，这样就产生50%的额外开销。当我们有包括上千个三角形的模型之后这个问题会更糟糕，这会产生一大堆浪费。更好的解决方案是只储存不同的顶点，并设定绘制这些顶点的顺序。这样子我们只要储存4个顶点就能绘制矩形了，之后只要指定绘制的顺序就行了。如果OpenGL提供这个功能就好了，对吧？
+> **绕序（winding）提醒**：上面两个三角形的顶点顺序都是**顺时针（CW）**，而 OpenGL 默认把**逆时针（CCW）**视为正面。本节没有启用面剔除，所以显示不受影响；但一旦开启 `glEnable(GL_CULL_FACE)`，这个矩形会被**完全剔除**、什么都看不到。若后续要开启面剔除，需要把顶点按 CCW 重排（例如索引 `0,1,3` 改为 `0,3,1`）。
+
+可以看到，有几个顶点叠加了。我们指定了`右下角`和`左上角`两次！一个矩形只有4个而不是6个顶点，这样顶点数据量就多出了 50%。当我们有包括上千个三角形的模型之后这个问题会更糟糕，这会产生一大堆浪费。更好的解决方案是只储存不同的顶点，并设定绘制这些顶点的顺序。这样子我们只要储存4个顶点就能绘制矩形了，之后只要指定绘制的顺序就行了。
 
 值得庆幸的是，元素缓冲区对象的工作方式正是如此。 **EBO是一个缓冲区，就像一个顶点缓冲区对象一样，它存储 OpenGL 要绘制顶点的==索引==**。这种所谓的**索引绘制(Indexed Drawing)**正是我们问题的解决方案。首先，我们先要定义（不重复的）顶点，和绘制出矩形所需的索引：
 
@@ -825,30 +829,31 @@ unsigned int EBO;
 glGenBuffers(1, &EBO);
 ```
 
-与VBO类似，我们先绑定EBO然后用glBufferData把索引复制到缓冲里。同样，和VBO类似，我们会把这些函数调用放在绑定和解绑函数调用之间，只不过这次我们把缓冲的类型定义为GL_ELEMENT_ARRAY_BUFFER。
+与 VBO 类似，我们先绑定 EBO 然后用 `glBufferData` 把索引复制到**缓冲区**里。同样，和 VBO 类似，我们会把这些函数调用放在绑定和解绑函数调用之间，只不过这次我们把缓冲的类型定义为 `GL_ELEMENT_ARRAY_BUFFER`。
 
 ```c++
 glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
 glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 ```
 
-注意：我们传递了GL_ELEMENT_ARRAY_BUFFER当作缓冲目标。最后一件要做的事是用glDrawElements来替换glDrawArrays函数，表示我们要从索引缓冲区渲染三角形。使用glDrawElements时，我们会使用当前绑定的索引缓冲对象中的索引进行绘制：
+注意：我们传递了 `GL_ELEMENT_ARRAY_BUFFER` 当作缓冲目标。最后一件要做的事是用 `glDrawElements` 来替换 `glDrawArrays` 函数，表示我们要从索引缓冲区渲染三角形。使用 `glDrawElements` 时，我们会使用当前绑定的索引缓冲对象中的索引进行绘制：
 
 ```c++
 glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
 glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 ```
 
-- 第一个参数指定了我们**绘制的模式**，这个和glDrawArrays的一样。
-- 第二个参数是我们打算**绘制顶点的个数**，这里填6，也就是说我们一共需要绘制6个顶点。
-- 第三个参数是**索引的类型**，这里是GL_UNSIGNED_INT。
-- 最后一个参数里我们可以指定**EBO中的偏移量（或者传递一个索引数组，但是这是当你不在使用索引缓冲对象的时候），但是我们会在这里填写0。**
+- 第一个参数指定了我们**绘制的模式**，这个和 `glDrawArrays` 的一样。
+- 第二个参数是我们打算**绘制顶点的个数**，这里填 6，也就是说我们一共需要绘制 6 个顶点。
+- 第三个参数是**索引的类型**，这里是 `GL_UNSIGNED_INT`。
+- 最后一个参数是**索引数据在 EBO 中的字节偏移量**，这里填 `0`。
+  **关键陷阱**：只要 `GL_ELEMENT_ARRAY_BUFFER` 上绑定了 EBO，这个参数就一定被解释为**字节偏移**，绝不会被当作指针；只有在没有绑定 EBO 时，它才是客户端索引数组指针（而核心模式不支持这种做法）。
 
-`glDrawElements`函数从当前绑定到`GL_ELEMENT_ARRAY_BUFFER`目标的EBO中获取其索引。这意味着我们每次想要使用索引渲染对象时都必须绑定相应的EBO，这又有点麻烦。碰巧顶点数组对象也跟踪元素缓冲区对象绑定。在绑定VAO时，绑定的最后一个元素缓冲区对象存储为VAO的元素缓冲区对象。然后，绑定到VAO也会自动绑定该EBO。
+`glDrawElements` 函数从当前绑定到 `GL_ELEMENT_ARRAY_BUFFER` 目标的 EBO 中获取其索引。这意味着我们每次想要使用索引渲染对象时都必须绑定相应的 EBO，这又有点麻烦。碰巧顶点数组对象也跟踪元素缓冲区对象绑定。在绑定 VAO 时，**EBO 的绑定会被恢复为该 VAO 所记录的那个对象**（准确说是"切换成"，而不是"额外再绑一次"），因此只要 VAO 里记了 EBO，绘制前绑定 VAO 就足够了。
 
 ![img](https://learnopengl-cn.github.io/img/01/04/vertex_array_objects_ebo.png)
 
-**当目标是`GL_ELEMENT_ARRAY_BUFFER`的时候，VAO会储存`glBindBuffer`的函数调用。这也意味着它也会储存解绑调用，所以确保你没有在解绑VAO之前解绑索引数组缓冲，否则它就没有这个EBO配置了。**但是 VAO 不参与 VBO 的管理，所有一定要注意 VAO 和 EBO 的解绑顺序（先解绑 VAO，再解绑 EBO）
+**当目标是`GL_ELEMENT_ARRAY_BUFFER`的时候，VAO 会储存 `glBindBuffer` 的函数调用（对 `GL_ARRAY_BUFFER` 则不记录）。这也意味着它也会储存解绑调用，所以确保你==没有==在解绑 VAO 之前解绑索引数组缓冲，否则该 VAO 就会记下"EBO = 0"，绘制时索引数据将丢失。所以一定要注意 VAO 和 EBO 的解绑顺序（==先解绑 VAO，再解绑 EBO==）。**
 
 最后的初始化和绘制代码现在看起来像这样：
 
@@ -856,12 +861,15 @@ glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 // ..:: 初始化代码 :: ..
 // 1. 绑定顶点数组对象
 glBindVertexArray(VAO);
+
 // 2. 把我们的顶点数组复制到一个顶点缓冲中，供OpenGL使用
 glBindBuffer(GL_ARRAY_BUFFER, VBO);
 glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
 // 3. 复制我们的索引数组到一个索引缓冲中，供OpenGL使用
 glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
 glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+
 // 4. 设定顶点属性指针
 glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
 glEnableVertexAttribArray(0);
@@ -875,9 +883,14 @@ glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 glBindVertexArray(0);
 ```
 
-运行程序会获得下面这样的图片的结果。左侧图片看应该起来很熟悉，而右侧的则是使用线框模式(Wireframe Mode)绘制的。线框矩形可以显示出矩形的确是由两个三角形组成的。
+运行程序会获得下面这样的图片的结果。左侧图片应该看起来很熟悉，而右侧的则是使用线框模式(Wireframe Mode)绘制的。线框矩形可以显示出矩形的确是由两个三角形组成的。
+
+> 线框模式由 `glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)` 开启，恢复填充用 `GL_FILL`。
+> 注意：macOS（以及多数现代驱动）**只支持线宽 1.0**，`glLineWidth(2.0)` 之类的调用会被忽略或产生 `GL_INVALID_VALUE`。
 
 ![img](https://learnopengl-cn.github.io/img/01/04/hellotriangle2.png)
+
+
 
 **线框模式(Wireframe Mode)**
 
